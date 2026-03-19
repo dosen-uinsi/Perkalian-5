@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kelipatan Lima</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Nunito', sans-serif; }
+
+    @keyframes popIn {
+      0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+      60% { transform: scale(1.3) rotate(5deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    @keyframes celebrate {
+      0% { transform: scale(1); }
+      25% { transform: scale(1.05) rotate(-2deg); }
+      50% { transform: scale(1.1) rotate(2deg); }
+      75% { transform: scale(1.05) rotate(-1deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    @keyframes confettiFall {
+      0% { transform: translateY(-10%) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110%) rotate(720deg); opacity: 0; }
+    }
+
+    @keyframes pulseRing {
+      0% { transform: scale(1); opacity: 0.6; }
+      100% { transform: scale(1.8); opacity: 0; }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes buttonGlow {
+      0%, 100% { box-shadow: 0 20px 25px -5px rgba(56, 189, 248, 0.4), 0 0 30px rgba(56, 189, 248, 0.3); }
+      50% { box-shadow: 0 20px 25px -5px rgba(56, 189, 248, 0.6), 0 0 40px rgba(56, 189, 248, 0.5); }
+    }
+
+    .number-pop { animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+    .celebrate-anim { animation: celebrate 0.6s ease-in-out; }
+    .confetti-piece { animation: confettiFall 2.5s ease-in forwards; }
+    .pulse-ring { animation: pulseRing 0.8s ease-out forwards; }
+    .float-anim { animation: float 3s ease-in-out infinite; }
+    .glow-button { animation: buttonGlow 2s ease-in-out infinite; }
+
+    .btn-press:active { transform: scale(0.92); }
+    .btn-press { transition: transform 0.15s ease; }
+
+    .progress-fill { transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="app-wrapper" class="h-full w-full overflow-auto flex flex-col items-center justify-center p-6 relative" style="background-color: #0f172a;"><!-- Confetti Container -->
+   <div id="confetti-container" class="fixed inset-0 pointer-events-none z-50"></div><!-- Main Card -->
+   <div class="w-full max-w-md relative"><!-- Title -->
+    <h1 id="main-title" class="text-center font-900 mb-8 tracking-tight" style="color: #f8fafc; font-size: 32px;">Kelipatan 5</h1><!-- Counter Display -->
+    <div class="rounded-3xl p-8 mb-6 text-center relative overflow-hidden" style="background-color: #1e293b;"><!-- Current Number -->
+     <div id="number-display" class="font-900 tabular-nums leading-none mb-3" style="color: #38bdf8; font-size: 72px;">
+      0
+     </div>
+     <p id="press-info" class="font-600 text-sm" style="color: #94a3b8;">Tekan tombol untuk mulai!</p>
+    </div><!-- Numbers Grid -->
+    <div id="numbers-grid" class="grid grid-cols-5 gap-2 mb-6 min-h-[88px]"><!-- Numbers will appear here -->
+    </div><!-- Progress Bar -->
+    <div class="rounded-full h-3 mb-2 overflow-hidden" style="background-color: #1e293b;">
+     <div id="progress-bar" class="progress-fill h-full rounded-full" style="width: 0%; background-color: #38bdf8;"></div>
+    </div>
+    <p id="progress-text" class="text-center text-xs font-600 mb-6" style="color: #94a3b8;">0 / 10 tekanan</p><!-- Button -->
+    <div class="flex justify-center relative mb-6">
+     <div id="pulse-container" class="absolute inset-0 flex items-center justify-center pointer-events-none"></div><button id="main-btn" onclick="handlePress()" class="btn-press font-800 text-lg px-10 py-4 rounded-2xl shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/30 transition-shadow cursor-pointer border-0 outline-none focus:ring-4 focus:ring-sky-400/30" style="background-color: #38bdf8; color: #0f172a;"> <span class="flex items-center gap-2"> <i data-lucide="hand-metal" style="width:22px; height:22px;"></i> <span id="btn-text">Tekan Saya!</span> </span> </button>
+    </div><!-- Completion Message -->
+    <div id="completion-msg" class="hidden rounded-2xl p-6 mb-6 text-center" style="background-color: #1e293b;">
+     <div class="text-4xl mb-2">
+      🎉
+     </div>
+     <p class="font-800 text-lg" style="color: #f8fafc;">Selesai!</p>
+     <p class="font-600 text-sm mt-1" style="color: #94a3b8;">Kamu berhasil menekan 10 kali!</p>
+     <p class="font-700 mt-2" style="color: #38bdf8;">5 + 10 + 15 + ... + 50 = <span class="text-xl">275</span></p>
+    </div><!-- Start Game Button (hidden initially) -->
+    <div id="reset-area" class="hidden text-center"><button onclick="resetApp()" class="btn-press glow-button font-900 text-lg px-12 py-4 rounded-2xl cursor-pointer border-0 outline-none transition-all focus:ring-4" style="background-color: #38bdf8; color: #0f172a; box-shadow: 0 20px 25px -5px rgba(56, 189, 248, 0.4), 0 0 30px rgba(56, 189, 248, 0.3); focus:ring-color: rgba(56, 189, 248, 0.3);"> <span class="flex items-center gap-2 justify-center"> <i data-lucide="play" style="width:24px; height:24px;"></i> Mulai Permainan </span> </button>
+    </div>
+   </div>
+  </div>
+  <script>
+    let pressCount = 0;
+    const maxPresses = 10;
+
+    const defaultConfig = {
+      main_title: 'Kelipatan 5',
+      button_text: 'Tekan Saya!',
+      background_color: '#0f172a',
+      surface_color: '#1e293b',
+      text_color: '#f8fafc',
+      primary_action_color: '#38bdf8',
+      secondary_color: '#94a3b8',
+      font_family: 'Nunito',
+      font_size: 16
+    };
+
+    function applyConfig(config) {
+      const bg = config.background_color || defaultConfig.background_color;
+      const surface = config.surface_color || defaultConfig.surface_color;
+      const text = config.text_color || defaultConfig.text_color;
+      const primary = config.primary_action_color || defaultConfig.primary_action_color;
+      const secondary = config.secondary_color || defaultConfig.secondary_color;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      const baseSize = config.font_size || defaultConfig.font_size;
+
+      // Background
+      document.getElementById('app-wrapper').style.backgroundColor = bg;
+
+      // Title
+      const titleEl = document.getElementById('main-title');
+      titleEl.textContent = config.main_title || defaultConfig.main_title;
+      titleEl.style.color = text;
+      titleEl.style.fontFamily = `${fontFamily}, sans-serif`;
+      titleEl.style.fontSize = `${baseSize * 2}px`;
+
+      // Surfaces
+      document.querySelectorAll('[data-surface]').forEach(el => {
+        el.style.backgroundColor = surface;
+      });
+      const counterBox = document.querySelector('.rounded-3xl');
+      if (counterBox) counterBox.style.backgroundColor = surface;
+
+      // Number display
+      const numDisplay = document.getElementById('number-display');
+      numDisplay.style.color = primary;
+      numDisplay.style.fontFamily = `${fontFamily}, sans-serif`;
+      numDisplay.style.fontSize = `${baseSize * 4.5}px`;
+
+      // Info text
+      const pressInfo = document.getElementById('press-info');
+      pressInfo.style.color = secondary;
+      pressInfo.style.fontFamily = `${fontFamily}, sans-serif`;
+      pressInfo.style.fontSize = `${baseSize * 0.85}px`;
+
+      // Progress
+      document.getElementById('progress-bar').style.backgroundColor = primary;
+      const progText = document.getElementById('progress-text');
+      progText.style.color = secondary;
+      progText.style.fontFamily = `${fontFamily}, sans-serif`;
+      progText.style.fontSize = `${baseSize * 0.75}px`;
+
+      // Button
+      const btn = document.getElementById('main-btn');
+      btn.style.backgroundColor = primary;
+      btn.style.color = bg;
+      btn.style.fontFamily = `${fontFamily}, sans-serif`;
+      btn.style.fontSize = `${baseSize * 1.1}px`;
+
+      const btnText = document.getElementById('btn-text');
+      btnText.textContent = config.button_text || defaultConfig.button_text;
+
+      // Grid numbers
+      document.querySelectorAll('.num-chip').forEach(el => {
+        el.style.backgroundColor = primary;
+        el.style.color = bg;
+        el.style.fontFamily = `${fontFamily}, sans-serif`;
+      });
+
+      // Completion
+      const compMsg = document.getElementById('completion-msg');
+      compMsg.style.backgroundColor = surface;
+      compMsg.querySelectorAll('p').forEach((p, i) => {
+        if (i === 0) p.style.color = text;
+        else if (i === 2) p.style.color = primary;
+        else p.style.color = secondary;
+        p.style.fontFamily = `${fontFamily}, sans-serif`;
+      });
+
+      // Reset/Start button
+      const resetBtn = document.querySelector('#reset-area button');
+      if (resetBtn) {
+        resetBtn.style.backgroundColor = primary;
+        resetBtn.style.color = bg;
+        resetBtn.style.fontFamily = `${fontFamily}, sans-serif`;
+        resetBtn.style.fontSize = `${baseSize * 1.1}px`;
+      }
+
+      // Progress bar bg
+      const progBg = document.querySelector('.rounded-full.h-3');
+      if (progBg) progBg.style.backgroundColor = surface;
+    }
+
+    window.elementSdk.init({
+      defaultConfig,
+      onConfigChange: async (config) => { applyConfig(config); },
+      mapToCapabilities: (config) => ({
+        recolorables: [
+          { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+          { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+          { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+          { get: () => config.primary_action_color || defaultConfig.primary_action_color, set: (v) => { config.primary_action_color = v; window.elementSdk.setConfig({ primary_action_color: v }); } },
+          { get: () => config.secondary_color || defaultConfig.secondary_color, set: (v) => { config.secondary_color = v; window.elementSdk.setConfig({ secondary_color: v }); } }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+        }
+      }),
+      mapToEditPanelValues: (config) => new Map([
+        ['main_title', config.main_title || defaultConfig.main_title],
+        ['button_text', config.button_text || defaultConfig.button_text]
+      ])
+    });
+
+    function handlePress() {
+      if (pressCount >= maxPresses) return;
+
+      pressCount++;
+      const value = pressCount * 5;
+      const config = window.elementSdk.config;
+      const primary = config.primary_action_color || defaultConfig.primary_action_color;
+      const bg = config.background_color || defaultConfig.background_color;
+      const secondary = config.secondary_color || defaultConfig.secondary_color;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+
+      // Update number display
+      const numDisplay = document.getElementById('number-display');
+      numDisplay.textContent = value;
+      numDisplay.classList.remove('number-pop');
+      void numDisplay.offsetWidth;
+      numDisplay.classList.add('number-pop');
+
+      // Update info text
+      const pressInfo = document.getElementById('press-info');
+      if (pressCount < maxPresses) {
+        pressInfo.textContent = `Tekanan ke-${pressCount} · Sisa ${maxPresses - pressCount} lagi`;
+      } else {
+        pressInfo.textContent = 'Semua tekanan selesai! 🎉';
+      }
+
+      // Add number chip to grid
+      const grid = document.getElementById('numbers-grid');
+      const chipContainer = document.createElement('div');
+      chipContainer.className = 'flex flex-col items-center gap-1 number-pop';
+      
+      const chip = document.createElement('div');
+      chip.className = 'num-chip rounded-xl flex items-center justify-center font-800 text-sm py-2 w-12';
+      chip.style.backgroundColor = primary;
+      chip.style.color = bg;
+      chip.style.fontFamily = `${fontFamily}, sans-serif`;
+      chip.textContent = value;
+      
+      const label = document.createElement('div');
+      label.className = 'text-xs font-600';
+      label.style.color = secondary;
+      label.style.fontFamily = `${fontFamily}, sans-serif`;
+      label.textContent = `5×${pressCount}`;
+      
+      chipContainer.appendChild(chip);
+      chipContainer.appendChild(label);
+      grid.appendChild(chipContainer);
+
+      // Pulse effect
+      const pulseContainer = document.getElementById('pulse-container');
+      const ring = document.createElement('div');
+      ring.className = 'pulse-ring absolute rounded-2xl';
+      ring.style.width = '100%';
+      ring.style.height = '100%';
+      ring.style.border = `3px solid ${primary}`;
+      pulseContainer.appendChild(ring);
+      setTimeout(() => ring.remove(), 800);
+
+      // Progress bar
+      const progress = (pressCount / maxPresses) * 100;
+      document.getElementById('progress-bar').style.width = `${progress}%`;
+      document.getElementById('progress-text').textContent = `${pressCount} / ${maxPresses} tekanan`;
+
+      // Completion
+      if (pressCount >= maxPresses) {
+        const btn = document.getElementById('main-btn');
+        btn.style.opacity = '0.4';
+        btn.style.cursor = 'not-allowed';
+
+        setTimeout(() => {
+          document.getElementById('completion-msg').classList.remove('hidden');
+          document.getElementById('completion-msg').classList.add('celebrate-anim');
+          document.getElementById('reset-area').classList.remove('hidden');
+          launchConfetti();
+        }, 500);
+      }
+    }
+
+    function launchConfetti() {
+      const container = document.getElementById('confetti-container');
+      const config = window.elementSdk.config;
+      const colors = [
+        config.primary_action_color || defaultConfig.primary_action_color,
+        config.text_color || defaultConfig.text_color,
+        '#fbbf24', '#a78bfa', '#34d399', '#fb7185'
+      ];
+
+      for (let i = 0; i < 40; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece absolute';
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.top = '-5%';
+        piece.style.width = `${8 + Math.random() * 8}px`;
+        piece.style.height = `${8 + Math.random() * 8}px`;
+        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        piece.style.animationDelay = `${Math.random() * 1}s`;
+        piece.style.animationDuration = `${2 + Math.random() * 1.5}s`;
+        container.appendChild(piece);
+      }
+      setTimeout(() => { container.innerHTML = ''; }, 4000);
+    }
+
+    function resetApp() {
+      pressCount = 0;
+      document.getElementById('number-display').textContent = '0';
+      document.getElementById('press-info').textContent = 'Tekan tombol untuk mulai!';
+      document.getElementById('numbers-grid').innerHTML = '';
+      document.getElementById('progress-bar').style.width = '0%';
+      document.getElementById('progress-text').textContent = '0 / 10 tekanan';
+      document.getElementById('completion-msg').classList.add('hidden');
+      document.getElementById('reset-area').classList.add('hidden');
+
+      const btn = document.getElementById('main-btn');
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+
+      document.getElementById('confetti-container').innerHTML = '';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9def5e72e3062739',t:'MTc3Mzk1MzYzMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
